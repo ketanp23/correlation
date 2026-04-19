@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Visualization & Analysis — Advanced Business Lab</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F8F7F4;
+    --surface: #FFFFFF;
+    --surface2: #F1EFE8;
+    --border: rgba(60,52,40,0.12);
+    --border-strong: rgba(60,52,40,0.22);
+    --text: #1E1C18;
+    --text2: #6B6560;
+    --text3: #A09B94;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --blue-mid: #378ADD;
+    --teal: #0F6E56;
+    --teal-light: #E1F5EE;
+    --teal-mid: #1D9E75;
+    --coral: #993C1D;
+    --coral-light: #FAECE7;
+    --coral-mid: #D85A30;
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --purple-mid: #7F77DD;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --amber-mid: #EF9F27;
+    --green: #3B6D11;
+    --green-light: #EAF3DE;
+    --green-mid: #639922;
+    --red-mid: #E24B4A;
+    --red-light: #FCEBEB;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Sora', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--blue-light);
+    color: var(--blue);
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+
+  .brand-title {
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .brand-meta {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  .progress-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-mid), var(--teal-mid));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .nav-list { padding: 12px 0; flex: 1; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover { background: var(--surface2); }
+
+  .nav-item.active {
+    background: var(--blue-light);
+    border-left-color: var(--blue);
+  }
+
+  .nav-item.done { border-left-color: var(--teal-mid); }
+
+  .nav-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    flex-shrink: 0;
+  }
+
+  .nav-item.active .nav-num {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .nav-item.done .nav-num {
+    background: var(--teal-mid);
+    color: #fff;
+  }
+
+  .nav-text { font-size: 12px; color: var(--text2); line-height: 1.3; }
+  .nav-item.active .nav-text { color: var(--blue); font-weight: 500; }
+
+  .nav-dur {
+    font-size: 10px;
+    color: var(--text3);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    max-width: calc(100% - 260px);
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-case { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .topbar-title { font-family: 'Lora', serif; font-size: 16px; color: var(--text); }
+
+  .topbar-actions { display: flex; gap: 8px; }
+
+  .btn {
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+
+  .btn:hover { background: var(--surface2); color: var(--text); }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+  }
+
+  .btn-primary:hover { background: #0D4A85; color: #fff; }
+
+  /* ── CASE PANEL ── */
+  .case-panel { display: none; padding: 40px; max-width: 900px; }
+  .case-panel.visible { display: block; }
+
+  .case-header { margin-bottom: 28px; }
+
+  .case-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .case-num-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .case-dur-badge {
+    font-size: 10px;
+    color: var(--amber);
+    background: var(--amber-light);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .case-title {
+    font-family: 'Lora', serif;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.35;
+    margin-bottom: 14px;
+  }
+
+  .concept-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .pill {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 11px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+
+  .pill-blue { background: var(--blue-light); color: var(--blue); }
+  .pill-teal { background: var(--teal-light); color: var(--teal); }
+  .pill-purple { background: var(--purple-light); color: var(--purple); }
+  .pill-amber { background: var(--amber-light); color: var(--amber); }
+  .pill-coral { background: var(--coral-light); color: var(--coral); }
+  .pill-green { background: var(--green-light); color: var(--green); }
+
+  /* ── SECTION BLOCKS ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+    margin-top: 28px;
+  }
+
+  .scenario-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--blue);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+    box-shadow: var(--shadow);
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+
+  .theory-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .theory-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .theory-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--purple-mid);
+    flex-shrink: 0;
+  }
+
+  .theory-body { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+  .formula-box {
+    background: #1E1C18;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    color: #C0DD97;
+    line-height: 2;
+    white-space: pre-wrap;
+  }
+
+  /* ── METRICS ── */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .metric-label { font-size: 11px; color: var(--text3); font-weight: 500; }
+  .metric-val { font-size: 22px; font-weight: 600; color: var(--text); margin-top: 2px; font-family: 'Sora', sans-serif; }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+  /* ── CHART ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-top: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .chart-title { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 12px; }
+
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .chart-area { position: relative; width: 100%; height: 260px; }
+
+  /* ── TASKS ── */
+  .tasks-card {
+    background: var(--green-light);
+    border: 1px solid #C0DD97;
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-top: 16px;
+  }
+
+  .tasks-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .task-item {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--green);
+    line-height: 1.6;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(99,153,34,0.15);
+  }
+
+  .task-item:last-child { border-bottom: none; }
+
+  .task-num {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green-mid);
+    background: rgba(99,153,34,0.15);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── INSIGHT ── */
+  .insight-card {
+    background: var(--blue-light);
+    border: 1px solid #B5D4F4;
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-top: 12px;
+  }
+
+  .insight-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .insight-title::before {
+    content: '💡';
+    font-size: 13px;
+  }
+
+  .insight-body { font-size: 13px; color: var(--blue); line-height: 1.7; }
+
+  /* ── NAV ARROWS ── */
+  .nav-arrows {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .nav-position { font-size: 13px; color: var(--text3); }
+
+  /* ── HEATMAP CANVAS ── */
+  .heatmap-area { position: relative; width: 100%; height: 280px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 220px; }
+    .main { margin-left: 220px; max-width: calc(100% - 220px); }
+    .case-panel { padding: 24px 24px; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 680px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; max-width: 100%; }
+    .case-panel { padding: 20px; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .topbar { padding: 14px 20px; }
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; max-width: 100%; }
+    .topbar { position: static; }
+    .case-panel { display: block !important; page-break-before: always; }
+    .case-panel:first-child { page-break-before: auto; }
+    .btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-badge">Advanced Lab</div>
+      <div class="brand-title">Data Visualization & Analysis</div>
+      <div class="brand-meta">10 Cases · 120 Minutes</div>
+    </div>
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span id="progressText">Case 1 of 10</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:10%"></div>
+      </div>
+    </div>
+    <nav class="nav-list" id="navList"></nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-case" id="topbarCase">Case 01</div>
+        <div class="topbar-title" id="topbarTitle">Retail Sales — Understanding Distribution with Histograms</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn" id="btnPrev" onclick="goToCase(currentCase-1)">← Prev</button>
+        <button class="btn btn-primary" id="btnNext" onclick="goToCase(currentCase+1)">Next →</button>
+      </div>
+    </div>
+    <div id="casePanels"></div>
+  </main>
+
+</div>
+
+<script>
+const CASES = [
+  {
+    num: "Case 01", title: "Retail Sales — Understanding Distribution with Histograms",
+    duration: "12 min",
+    concepts: [["Histogram","pill-blue"],["Univariate","pill-teal"],["Normal Distribution","pill-purple"],["Skewness","pill-amber"],["Probability","pill-coral"]],
+    scenario: "FreshMart, a supermarket chain, wants to understand daily transaction values across 500 stores. The analytics team needs to identify the distribution shape, spot outliers, and estimate the probability that a customer transaction exceeds $150.",
+    theory: { title: "Histogram & Probability Density", body: "A histogram divides continuous data into bins and shows frequency. The shape reveals the distribution — symmetric (normal), right-skewed (most values low with a long right tail), or left-skewed. Area under a histogram ÷ total area = probability. A bell-shaped histogram suggests a Normal distribution, enabling z-score calculations for probability queries." },
+    formula: "Z = (X − μ) / σ         P(X > 150) = 1 − Φ(Z)\nMean μ = Σx/n           Variance σ² = Σ(x−μ)²/n",
+    metrics: [{label:"Mean Transaction",val:"$112",sub:"avg spend"},{label:"Std Dev",val:"$38",sub:"σ"},{label:"P(X > $150)",val:"15.4%",sub:"probability"},{label:"Skewness",val:"+0.72",sub:"right-skewed"}],
+    chartType: "histogram",
+    chartTitle: "Daily transaction value distribution — FreshMart (n=500 stores)",
+    tasks: ["Identify which bin contains the mode (most frequent transaction range)","Calculate z-score for a $200 transaction: Z = (200−112)/38","Estimate P($80 < X < $140) using the histogram area","Explain why right skew occurs in retail transaction data"],
+    insight: "The right skew indicates that while most transactions cluster around $80–$130, a minority of high-value purchases ($250+) pull the mean above the median — a classic retail pattern driven by bulk buyers."
+  },
+  {
+    num: "Case 02", title: "Employee Performance — Scatter Plot & Correlation",
+    duration: "12 min",
+    concepts: [["Scatter Plot","pill-blue"],["Pearson Correlation","pill-coral"],["Bivariate","pill-teal"],["Regression Line","pill-purple"],["Outlier Detection","pill-amber"]],
+    scenario: "TechCorp HR division has data on 200 employees: weekly training hours and quarterly performance scores. Leadership wants to know if training investment drives measurable performance improvement, and how strong that relationship is.",
+    theory: { title: "Scatter Plot & Pearson Correlation", body: "A scatter plot maps two continuous variables on x and y axes, revealing relationships. Pearson's r ranges from −1 (perfect negative) to +1 (perfect positive). r > 0.7 indicates strong positive correlation. The scatter's pattern also shows linearity, heteroscedasticity (fan-shaped spread), and outlier positions — points far from the trend line warrant investigation." },
+    formula: "r = Σ[(xᵢ−x̄)(yᵢ−ȳ)] / √[Σ(xᵢ−x̄)² · Σ(yᵢ−ȳ)²]\nR² = r²   (variance in performance explained by training hours)",
+    metrics: [{label:"Pearson r",val:"0.81",sub:"strong positive"},{label:"R²",val:"65.6%",sub:"variance explained"},{label:"Avg Training",val:"6.2 hrs/wk",sub:""},{label:"Outliers",val:"8",sub:"flagged employees"}],
+    chartType: "scatter",
+    chartTitle: "Training hours vs performance score — TechCorp (n=200 employees)",
+    tasks: ["Identify the cluster with ≥8 hrs training — what is their average performance score?","Locate the 2 outlier points (high training, low performance) — what might explain this?","Interpret R² = 65.6%: what does the remaining 34.4% represent?","Does correlation imply causation here? List 2 confounding variables."],
+    insight: "r = 0.81 indicates a strong positive correlation between training and performance. However, the 8 outliers (high training, low performance) suggest that training quality, role fit, or individual motivation may moderate the relationship."
+  },
+  {
+    num: "Case 03", title: "Regional Sales — Bar Chart Comparisons",
+    duration: "10 min",
+    concepts: [["Bar Chart","pill-blue"],["Grouped Bar","pill-teal"],["Categorical Data","pill-amber"],["Comparative Analysis","pill-coral"],["Business KPIs","pill-purple"]],
+    scenario: "GlobalRetail operates in 5 regions. The CFO needs a Q1–Q4 sales comparison by region to identify underperformers, seasonal trends, and resource reallocation opportunities heading into the next fiscal year.",
+    theory: { title: "Bar Charts — Categorical Comparison", body: "Bar charts encode magnitude using length — ideal for comparing discrete categories. Grouped bars enable multi-variable comparison (e.g., region × quarter). Key analysis: compare bar heights, look for consistent leaders/laggards, spot seasonal patterns (Q4 peaks in retail), and identify whether differences are statistically or just visually significant." },
+    formula: "YoY Growth = (Q4 − Q1) / Q1 × 100%\nRegion Share = Region Revenue / Total Revenue × 100%",
+    metrics: [{label:"Top Region",val:"North",sub:"$4.2M Q4"},{label:"Lowest Q4",val:"East",sub:"$1.8M"},{label:"Avg Q4 Growth",val:"+18%",sub:"vs Q1"},{label:"Market Leader",val:"38%",sub:"North share"}],
+    chartType: "bar_grouped",
+    chartTitle: "Regional quarterly revenue ($M) — GlobalRetail 5 regions",
+    tasks: ["Calculate YoY growth rate for each region from Q1 to Q4","Which region shows the most consistent quarter-over-quarter growth?","If budget is $2M for marketing, how would you allocate it based on this chart?","Build a hypothesis: why might the East region consistently underperform?"],
+    insight: "North dominates with 38% revenue share, but West shows the steepest growth trajectory (+31% Q1→Q4). East's stagnation despite similar market size suggests structural issues worth investigating — pricing, competition, or management."
+  },
+  {
+    num: "Case 04", title: "Hospital Wait Times — Box Plot & Outlier Analysis",
+    duration: "12 min",
+    concepts: [["Box Plot","pill-coral"],["IQR","pill-blue"],["Outliers","pill-purple"],["Median","pill-teal"],["Five-Number Summary","pill-amber"]],
+    scenario: "Metro Hospital Group wants to standardize patient wait times across 5 departments: Emergency, Cardiology, Orthopedics, Oncology, and General. Patient satisfaction scores correlate directly with wait time variability — not just the average.",
+    theory: { title: "Box Plot — Five-Number Summary", body: "A box plot visualizes: Minimum, Q1 (25th percentile), Median (50th), Q3 (75th), Maximum. The box spans the IQR = Q3 − Q1. Whiskers extend to 1.5×IQR beyond quartiles; points beyond are outliers. Box plots excel at showing spread, skew, and department-to-department variability simultaneously — something a bar chart of means hides." },
+    formula: "IQR = Q3 − Q1\nOutlier bounds: < Q1 − 1.5×IQR   or   > Q3 + 1.5×IQR\nCoefficient of Variation = σ/μ × 100%",
+    metrics: [{label:"Emergency Median",val:"47 min",sub:"highest"},{label:"General Median",val:"12 min",sub:"lowest"},{label:"Widest IQR",val:"Emergency",sub:"42 min spread"},{label:"Outliers Total",val:"14",sub:"across depts"}],
+    chartType: "boxplot",
+    chartTitle: "Patient wait time distribution by department — Metro Hospital (simulated)",
+    tasks: ["Calculate the IQR for Emergency: if Q1=32 min and Q3=74 min, what is the outlier threshold?","Which department has the most consistent (lowest IQR) wait times?","Explain why the median is preferred over the mean for wait time analysis","Propose one operational change per department to reduce the IQR"],
+    insight: "Emergency shows the highest median AND widest spread (IQR = 42 min), indicating systemic unpredictability. Oncology's left-skewed box reveals most patients wait short times, with a few extreme outliers from complex case preparation."
+  },
+  {
+    num: "Case 05", title: "Stock Portfolio — Time Series & Line Plots",
+    duration: "12 min",
+    concepts: [["Line Plot","pill-blue"],["Time Series","pill-teal"],["Trend Analysis","pill-purple"],["Moving Average","pill-amber"],["Multivariate","pill-coral"]],
+    scenario: "Apex Capital manages a portfolio of 3 tech stocks over 12 months. The risk team needs to visualize price trajectories, identify trend reversals, and compare asset co-movement to assess diversification effectiveness.",
+    theory: { title: "Line Plots & Moving Averages", body: "Line plots are optimal for continuous time-series data — connecting data points emphasizes change over time. A 30-day moving average smooths short-term volatility to reveal the underlying trend. Comparing multiple lines on one chart reveals correlation in movement (co-movement), divergence (diversification), and relative momentum." },
+    formula: "Moving Average(n) = (x_t + x_{t-1} + ... + x_{t-n+1}) / n\nReturn = (P_t − P_0) / P_0 × 100%\nVolatility = σ(daily returns) × √252",
+    metrics: [{label:"Stock A Return",val:"+42%",sub:"12-month"},{label:"Stock B Return",val:"+11%",sub:"12-month"},{label:"Stock C Return",val:"−8%",sub:"12-month"},{label:"Portfolio Vol",val:"18.4%",sub:"annualized"}],
+    chartType: "line_multi",
+    chartTitle: "Stock price performance — 12-month normalized to base 100",
+    tasks: ["Identify the month where all three stocks moved in the same direction — what does this suggest?","Calculate 3-month moving average for Stock A using months 1, 2, 3 prices","Which stock pair is most correlated by visual inspection? Estimate Pearson r.","At what month did Stock C begin its downtrend? What signals preceded the reversal?"],
+    insight: "Stock A and B show r ≈ 0.78, suggesting they respond to the same market factor. Stock C's divergence from month 7 onwards indicates company-specific risk — good for diversification despite its negative return."
+  },
+  {
+    num: "Case 06", title: "Customer Churn — Probability & Logistic Curve",
+    duration: "13 min",
+    concepts: [["Logistic Curve","pill-purple"],["Probability","pill-blue"],["Sigmoid Function","pill-coral"],["Classification","pill-teal"],["Predictive Analytics","pill-amber"]],
+    scenario: "TelecomPlus has 50,000 subscribers. Customer success managers need a probability model: given a customer's engagement score (0–100), what is the probability they churn within 30 days? This drives intervention prioritization.",
+    theory: { title: "Logistic (Sigmoid) Curve & Probability", body: "Unlike linear regression, logistic regression outputs P(event) ∈ [0,1]. The sigmoid curve: P = 1/(1+e^(-z)) maps any real number to a probability. Low engagement score → P(churn) approaches 1. The decision boundary (P = 0.5) identifies the critical engagement threshold. Area under the ROC curve (AUC) measures model quality." },
+    formula: "P(churn) = 1 / (1 + e^(−(β₀ + β₁×engagement)))\nOdds Ratio = P / (1 − P)\nLog-Odds = β₀ + β₁×X",
+    metrics: [{label:"AUC-ROC",val:"0.87",sub:"model quality"},{label:"Decision Boundary",val:"Score 35",sub:"P=0.5 cutoff"},{label:"High Risk",val:"12,400",sub:"customers"},{label:"Precision",val:"81%",sub:"at threshold 0.5"}],
+    chartType: "logistic",
+    chartTitle: "Churn probability vs customer engagement score — TelecomPlus sigmoid model",
+    tasks: ["At engagement score = 20, read the curve: what is the approximate churn probability?","Calculate the odds ratio for a customer with P(churn) = 0.75","The threshold is set at P = 0.6: how does this change the false positive/negative trade-off?","Design an intervention strategy for the 12,400 high-risk customers — what data would you collect?"],
+    insight: "The steep sigmoid shape between scores 25–45 is the most sensitive intervention zone — small engagement improvements here yield the largest churn probability drops. Efforts should concentrate on this band rather than customers scoring below 25."
+  },
+  {
+    num: "Case 07", title: "Manufacturing Quality — Multivariate Correlation Matrix",
+    duration: "13 min",
+    concepts: [["Correlation Matrix","pill-teal"],["Heatmap","pill-blue"],["Multivariate","pill-purple"],["Feature Selection","pill-coral"],["Quality Control","pill-amber"]],
+    scenario: "AutoParts Inc. measures 6 variables on each component: temperature, pressure, machine speed, humidity, material density, and defect rate. Quality engineers need to identify which factors most strongly predict defects using correlation analysis.",
+    theory: { title: "Correlation Matrix & Heatmap", body: "A correlation matrix shows pairwise Pearson r values for all variable combinations. Visualized as a heatmap, warm colors (near +1) indicate positive correlation, cool colors (near −1) indicate negative correlation. This is a multivariate analysis technique. High correlation between two predictors signals multicollinearity — a problem for regression models." },
+    formula: "r_{xy} = Cov(x,y) / (σ_x · σ_y)\nCorr Matrix R is symmetric, diagonal = 1\nVIF = 1/(1−R²)  — detects multicollinearity",
+    metrics: [{label:"Defect vs Temp",val:"r = 0.83",sub:"strongest"},{label:"Defect vs Speed",val:"r = 0.71",sub:"strong"},{label:"Temp vs Speed",val:"r = 0.91",sub:"collinear!"},{label:"Humidity Impact",val:"r = 0.12",sub:"negligible"}],
+    chartType: "heatmap",
+    chartTitle: "Correlation matrix heatmap — AutoParts Inc. quality variables",
+    tasks: ["Identify the variable pair with the highest correlation — is this a problem for regression modeling?","Which 2 variables would you include in a defect-prediction model to avoid multicollinearity?","Humidity shows r=0.12 with defect rate — can we safely drop it from the model?","Propose a quality control intervention based on the strongest predictor of defects"],
+    insight: "Temperature and machine speed are both strongly correlated with defect rate but are 91% correlated with each other (multicollinearity). Engineers should use temperature as the primary predictor and control machine speed operationally rather than statistically."
+  },
+  {
+    num: "Case 08", title: "Marketing Campaign — Normal Distribution & Z-Scores",
+    duration: "11 min",
+    concepts: [["Normal Distribution","pill-purple"],["Z-Score","pill-blue"],["Probability","pill-teal"],["Statistical Significance","pill-amber"],["Bell Curve","pill-coral"]],
+    scenario: "BrandX ran a digital campaign across 1,000 ad sets. Click-through rates (CTR) are normally distributed with μ = 2.4% and σ = 0.6%. The media team wants to identify the top-performing 10% of ad sets to scale, and determine if a new ad format with CTR = 3.8% is statistically exceptional.",
+    theory: { title: "Normal Distribution & Z-Scores", body: "The Normal distribution is defined entirely by μ (mean) and σ (std dev). The Empirical Rule: 68% of data falls within ±1σ, 95% within ±2σ, 99.7% within ±3σ. A Z-score standardizes any value to a universal scale. Z-tables convert Z-scores to probabilities, enabling us to find percentile rank or threshold values for any specific probability." },
+    formula: "Z = (X − μ) / σ\nP(X > x) = 1 − Φ(Z)\nTop 10% cutoff: X = μ + 1.282σ\n68 – 95 – 99.7 Empirical Rule",
+    metrics: [{label:"Mean CTR",val:"2.4%",sub:"μ"},{label:"Std Dev",val:"0.6%",sub:"σ"},{label:"Top 10% CTR",val:"≥ 3.17%",sub:"cutoff"},{label:"New Format Z",val:"Z = 2.33",sub:"top 1%"}],
+    chartType: "normal_curve",
+    chartTitle: "CTR normal distribution — BrandX 1,000 ad sets (μ=2.4%, σ=0.6%)",
+    tasks: ["Calculate Z-score for the new format: Z = (3.8 − 2.4) / 0.6","What percentage of ad sets perform better than the new format? Use P(Z > 2.33)","Find the CTR threshold for the top 5% of ad sets: X = 2.4 + 1.645×0.6","An ad set with CTR=1.2% — is it a statistical outlier (beyond 2σ)? Justify with Z-score."],
+    insight: "The new format's Z = 2.33 places it in the top 1% — statistically exceptional. Only ~10 out of 1,000 ad sets perform at this level by chance. This provides strong evidence to scale the format, though a controlled A/B test should confirm causal lift."
+  },
+  {
+    num: "Case 09", title: "E-commerce Revenue — Multivariate Bubble Chart",
+    duration: "12 min",
+    concepts: [["Bubble Chart","pill-amber"],["Multivariate","pill-blue"],["3-Variable Viz","pill-teal"],["Market Segmentation","pill-purple"],["Pareto Analysis","pill-coral"]],
+    scenario: "ShopStream has 8 product categories. The strategy team wants to simultaneously visualize: average order value (x-axis), conversion rate (y-axis), and total revenue (bubble size) to prioritize investment across categories.",
+    theory: { title: "Bubble Charts — 3-Variable Multivariate Analysis", body: "Bubble charts extend scatter plots by encoding a third variable in bubble size. This enables 3-dimensional analysis on a 2D plane. Quadrant analysis divides the chart into four zones: high AOV + high conversion (invest), high AOV + low conversion (optimize funnel), low AOV + high conversion (volume play), low AOV + low conversion (divest). Bubble area should encode value, not radius." },
+    formula: "Revenue = Orders × AOV × Conversion Rate\nBubble Area ∝ Revenue  (Area = πr²)\nROI Priority = Conversion Rate × Margin",
+    metrics: [{label:"Top Category",val:"Electronics",sub:"$2.1M revenue"},{label:"Best Conversion",val:"Books",sub:"6.8% CVR"},{label:"Highest AOV",val:"Furniture",sub:"$340 avg"},{label:"Pareto 80%",val:"3 categories",sub:"drive 80% revenue"}],
+    chartType: "bubble",
+    chartTitle: "E-commerce: AOV vs conversion rate vs revenue (bubble size) — ShopStream",
+    tasks: ["Identify the category in the top-right quadrant — what strategy would you apply?","Electronics has high revenue but low conversion (2.1%) — what does this reveal about its business model?","Furniture has the highest AOV but is a small bubble — what does this tell us about volume?","Apply the Pareto principle: which 2–3 categories should receive 80% of marketing budget?"],
+    insight: "Electronics sits in a high AOV / medium conversion zone with the largest bubble — volume plus premium pricing drive its revenue leadership. A 0.5% conversion improvement in Electronics alone adds ~$200K in annual revenue."
+  },
+  {
+    num: "Case 10", title: "Supply Chain — Statistical Inference & Hypothesis Testing",
+    duration: "13 min",
+    concepts: [["Hypothesis Testing","pill-coral"],["Confidence Intervals","pill-purple"],["Statistical Inference","pill-blue"],["Multivariate","pill-teal"],["Dashboard Design","pill-amber"]],
+    scenario: "GlobalLogix manages 4 supply routes. Operations managers need statistical tests to determine if Route A's mean delivery time is significantly different from the company standard of 72 hours — and a visual dashboard to communicate findings.",
+    theory: { title: "Confidence Intervals & Hypothesis Testing", body: "A 95% confidence interval means: if we repeated sampling 100 times, 95 of those intervals would contain the true population mean. A one-sample t-test tests H₀: μ = μ₀ against H₁: μ ≠ μ₀. The p-value is the probability of observing our data (or more extreme) if H₀ is true. p < 0.05 → reject H₀ → statistically significant difference." },
+    formula: "CI = x̄ ± t*(σ/√n)\nt = (x̄ − μ₀) / (s/√n)\nH₀: μ_RouteA = 72hrs      H₁: μ_RouteA ≠ 72hrs\np < 0.05  →  statistically significant result",
+    metrics: [{label:"Route A Mean",val:"68.4 hrs",sub:"n=120 shipments"},{label:"t-statistic",val:"t = −2.87",sub:""},{label:"p-value",val:"0.0048",sub:"< 0.05 ✓"},{label:"95% CI",val:"[66.9, 69.9]",sub:"hrs"}],
+    chartType: "dashboard_multi",
+    chartTitle: "Mean delivery time by route — GlobalLogix (vs 72h company benchmark)",
+    tasks: ["State H₀ and H₁ formally. Given p=0.0048, what is your conclusion at α=0.05?","Interpret the 95% CI [66.9, 69.9]: does it include the company standard of 72 hours?","Route B shows high variability (σ=18 hrs) — construct its 95% CI with n=80 shipments","Design 3 additional KPIs for this dashboard that would make it more actionable for ops managers"],
+    insight: "With p = 0.0048 < 0.05, we reject H₀ — Route A is significantly faster than the 72-hour standard. The CI [66.9, 69.9] confirms this gap is real, not sampling noise. Operations should standardize Route A's practices across all routes."
+  }
+];
+
+let currentCase = 0;
+const chartInstances = {};
+
+function buildNav() {
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+  CASES.forEach((c, i) => {
+    const item = document.createElement('div');
+    item.className = 'nav-item' + (i === currentCase ? ' active' : i < currentCase ? ' done' : '');
+    item.onclick = () => goToCase(i);
+    item.innerHTML = `
+      <div class="nav-num">${i+1}</div>
+      <div class="nav-text">${c.title.split('—')[0].trim()}</div>
+      <div class="nav-dur">${c.duration}</div>
+    `;
+    nav.appendChild(item);
+  });
+}
+
+function updateTopbar() {
+  const c = CASES[currentCase];
+  document.getElementById('topbarCase').textContent = c.num;
+  document.getElementById('topbarTitle').textContent = c.title;
+  document.getElementById('progressText').textContent = `Case ${currentCase+1} of ${CASES.length}`;
+  document.getElementById('progressFill').style.width = ((currentCase+1)/CASES.length*100)+'%';
+  document.getElementById('btnPrev').disabled = currentCase === 0;
+  document.getElementById('btnNext').disabled = currentCase === CASES.length-1;
+  document.getElementById('btnNext').textContent = currentCase === CASES.length-1 ? 'Done ✓' : 'Next →';
+}
+
+function goToCase(i) {
+  if (i < 0 || i >= CASES.length) return;
+  document.querySelectorAll('.case-panel').forEach(p => p.classList.remove('visible'));
+  currentCase = i;
+  const panel = document.getElementById('panel-'+i);
+  if (panel) panel.classList.add('visible');
+  buildNav();
+  updateTopbar();
+  if (!chartInstances[i]) setTimeout(() => renderChart(i), 80);
+  window.scrollTo(0, 0);
+}
+
+function buildPanels() {
+  const container = document.getElementById('casePanels');
+  CASES.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'case-panel' + (i === 0 ? ' visible' : '');
+    div.id = 'panel-'+i;
+    div.innerHTML = `
+      <div class="case-header">
+        <div class="case-eyebrow">
+          <span class="case-num-badge">${c.num}</span>
+          <span class="case-dur-badge">${c.duration}</span>
+        </div>
+        <div class="case-title">${c.title}</div>
+        <div class="concept-pills">${c.concepts.map(([label,cls]) => `<span class="pill ${cls}">${label}</span>`).join('')}</div>
+      </div>
+
+      <div class="section-label">Business Scenario</div>
+      <div class="scenario-box">${c.scenario}</div>
+
+      <div class="section-label">Concept & Theory</div>
+      <div class="two-col">
+        <div class="theory-box">
+          <div class="theory-title">${c.theory.title}</div>
+          <div class="theory-body">${c.theory.body}</div>
+        </div>
+        <div class="formula-box">${c.formula}</div>
+      </div>
+
+      <div class="section-label">Key Metrics</div>
+      <div class="metrics-row">${c.metrics.map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-val">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('')}</div>
+
+      <div class="section-label">Data Visualization</div>
+      <div class="chart-card">
+        <div class="chart-title">${c.chartTitle}</div>
+        <div class="chart-legend" id="legend-${i}"></div>
+        <div class="${c.chartType === 'heatmap' ? 'heatmap-area' : 'chart-area'}">
+          <canvas id="chart-${i}" role="img" aria-label="${c.chartTitle}"></canvas>
+        </div>
+      </div>
+
+      <div class="section-label">Student Tasks</div>
+      <div class="tasks-card">
+        <div class="tasks-title">Complete the following analysis tasks</div>
+        ${c.tasks.map((t,j) => `<div class="task-item"><div class="task-num">${j+1}</div><div>${t}</div></div>`).join('')}
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-title">Key Business Insight</div>
+        <div class="insight-body">${c.insight}</div>
+      </div>
+
+      <div class="nav-arrows">
+        <button class="btn" onclick="goToCase(${i-1})" ${i===0?'disabled':''}>← Previous Case</button>
+        <span class="nav-position">${i+1} / ${CASES.length}</span>
+        <button class="btn btn-primary" onclick="goToCase(${i+1})" ${i===CASES.length-1?'disabled':''}>${i===CASES.length-1?'Lab Complete ✓':'Next Case →'}</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderChart(i) {
+  const c = CASES[i];
+  const canvas = document.getElementById('chart-'+i);
+  const legendEl = document.getElementById('legend-'+i);
+  if (!canvas || chartInstances[i]) return;
+
+  const type = c.chartType;
+
+  if (type === 'histogram') {
+    const labels = ['$0–40','$40–80','$80–120','$120–160','$160–200','$200–240','$240–280','$280+'];
+    const data = [18, 62, 145, 132, 78, 39, 18, 8];
+    chartInstances[i] = new Chart(canvas, {
+      type:'bar',
+      data:{ labels, datasets:[{ data, backgroundColor:data.map((_,j)=>j>=3?'rgba(226,75,74,0.45)':'rgba(56,138,221,0.5)'), borderColor:data.map((_,j)=>j>=3?'#E24B4A':'#378ADD'), borderWidth:1, barPercentage:1.0, categoryPercentage:1.0 }]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>`Freq: ${ctx.parsed.y}  |  P: ${(ctx.parsed.y/500*100).toFixed(1)}%`}}}, scales:{x:{grid:{display:false},title:{display:true,text:'Transaction Value ($)',font:{size:11}}},y:{title:{display:true,text:'Frequency (stores)',font:{size:11}}}}}
+    });
+    legendEl.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:rgba(56,138,221,0.6)"></div>Below $120 — modal zone</div><div class="legend-item"><div class="legend-dot" style="background:rgba(226,75,74,0.6)"></div>Above $120 — right tail (27.8% of stores)</div>`;
+  }
+
+  else if (type === 'scatter') {
+    const seed = (n) => { let x=n; return ()=>{ x=Math.sin(x)*10000; return x-Math.floor(x); }; };
+    const r = seed(42);
+    const normal = Array.from({length:197},()=>{ const x=+(r()*10+1).toFixed(1); return {x,y:Math.min(100,Math.max(30,+(x*5.8+25+(r()-0.5)*22).toFixed(0)))}; });
+    const outliers = [{x:9.2,y:41},{x:8.7,y:38},{x:7.6,y:44}];
+    chartInstances[i] = new Chart(canvas, {
+      type:'scatter',
+      data:{ datasets:[
+        {label:'Employees',data:normal,backgroundColor:'rgba(56,138,221,0.4)',pointRadius:4},
+        {label:'Outliers',data:outliers,backgroundColor:'rgba(226,75,74,0.8)',pointRadius:7,pointStyle:'triangle'}
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Training: ${ctx.parsed.x}h/wk  |  Score: ${ctx.parsed.y}`}}}, scales:{x:{title:{display:true,text:'Weekly Training Hours'},min:0,max:12},y:{title:{display:true,text:'Performance Score (0–100)'},min:20,max:108}}}
+    });
+    legendEl.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:rgba(56,138,221,0.55)"></div>Regular employees</div><div class="legend-item"><div class="legend-dot" style="background:rgba(226,75,74,0.8)"></div>Outliers — high training, low score</div>`;
+  }
+
+  else if (type === 'bar_grouped') {
+    const regions = ['North','South','East','West','Central'];
+    chartInstances[i] = new Chart(canvas, {
+      type:'bar',
+      data:{ labels:regions, datasets:[
+        {label:'Q1',data:[2.8,1.9,1.4,1.6,2.1],backgroundColor:'rgba(56,138,221,0.25)',borderColor:'#378ADD',borderWidth:1},
+        {label:'Q2',data:[3.1,2.0,1.5,1.9,2.2],backgroundColor:'rgba(56,138,221,0.45)',borderColor:'#378ADD',borderWidth:1},
+        {label:'Q3',data:[3.7,2.3,1.6,2.4,2.4],backgroundColor:'rgba(56,138,221,0.65)',borderColor:'#185FA5',borderWidth:1},
+        {label:'Q4',data:[4.2,2.5,1.8,3.1,2.6],backgroundColor:'rgba(56,138,221,0.9)',borderColor:'#185FA5',borderWidth:1}
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}},y:{title:{display:true,text:'Revenue ($M)'}}}}
+    });
+    legendEl.innerHTML = ['Q1','Q2','Q3','Q4'].map((q,j)=>`<div class="legend-item"><div class="legend-dot" style="background:rgba(56,138,221,${0.3+j*0.22})"></div>${q}</div>`).join('');
+  }
+
+  else if (type === 'boxplot') {
+    const depts=['Emergency','Cardiology','Orthopedics','Oncology','General'];
+    const mins=[15,8,10,5,5],q1s=[32,18,15,8,9],q3s=[74,41,35,21,16],maxs=[98,68,55,42,28];
+    const colors=['#E24B4A','#378ADD','#EF9F27','#7F77DD','#1D9E75'];
+    chartInstances[i] = new Chart(canvas, {
+      type:'bar',
+      data:{ labels:depts, datasets:[
+        {label:'min→Q1',data:q1s.map((q,j)=>q-mins[j]),backgroundColor:'rgba(0,0,0,0)',borderColor:'rgba(0,0,0,0)',stack:'box'},
+        {label:'IQR',data:q3s.map((q,j)=>q-q1s[j]),backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:2,stack:'box'},
+        {label:'Q3→max',data:maxs.map((m,j)=>m-q3s[j]),backgroundColor:'rgba(0,0,0,0)',borderColor:'rgba(0,0,0,0)',stack:'box'}
+      ]},
+      options:{ responsive:true,maintainAspectRatio:false,indexAxis:'y',
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>{ const j=ctx.dataIndex; return `Min:${mins[j]} Q1:${q1s[j]} Q3:${q3s[j]} Max:${maxs[j]} min`; }}}},
+        scales:{x:{stacked:true,title:{display:true,text:'Wait Time (minutes)'}},y:{stacked:true,grid:{display:false}}}
+      }
+    });
+    legendEl.innerHTML = depts.map((d,j)=>`<div class="legend-item"><div class="legend-dot" style="background:${colors[j]}"></div>${d}</div>`).join('');
+  }
+
+  else if (type === 'line_multi') {
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    chartInstances[i] = new Chart(canvas, {
+      type:'line',
+      data:{ labels:months, datasets:[
+        {label:'Stock A (+42%)',data:[100,108,115,119,127,134,129,138,142,146,139,142],borderColor:'#378ADD',backgroundColor:'rgba(56,138,221,0.05)',fill:true,tension:0.35,borderWidth:2.5,pointRadius:3},
+        {label:'Stock B (+11%)',data:[100,103,107,109,112,108,111,109,112,113,110,111],borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.05)',fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,borderDash:[5,3]},
+        {label:'Stock C (−8%)',data:[100,101,99,103,105,108,104,98,94,91,88,92],borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.05)',fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,borderDash:[2,4]}
+      ]},
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'Indexed Price (Base=100)'},min:80,max:155},x:{grid:{color:'rgba(128,128,128,0.07)'}}}}
+    });
+    legendEl.innerHTML = [['Stock A (+42%)','#378ADD'],['Stock B (+11%)','#1D9E75'],['Stock C (−8%)','#E24B4A']].map(([l,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${l}</div>`).join('');
+  }
+
+  else if (type === 'logistic') {
+    const xs=Array.from({length:51},(_,i)=>i*2);
+    const sig=x=>+(1/(1+Math.exp(0.15*(x-35)))).toFixed(3);
+    chartInstances[i] = new Chart(canvas, {
+      type:'line',
+      data:{ labels:xs, datasets:[
+        {label:'P(Churn)',data:xs.map(x=>sig(x)),borderColor:'#D85A30',backgroundColor:'rgba(216,90,48,0.07)',fill:true,tension:0.4,borderWidth:2.5,pointRadius:0},
+        {label:'Decision boundary P=0.5',data:xs.map(()=>0.5),borderColor:'#BA7517',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}
+      ]},
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Engagement Score'},ticks:{callback:(v,i)=>xs[i]%20===0?xs[i]:''}},y:{title:{display:true,text:'P(Churn within 30 days)'},min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}}}}
+    });
+    legendEl.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>Sigmoid curve P(churn)</div><div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div>Decision boundary P=0.5 at score ≈ 35</div>`;
+  }
+
+  else if (type === 'heatmap') {
+    const vars=['Temp','Pressure','Speed','Humidity','Density','Defect%'];
+    const matrix=[[1.00,0.62,0.91,0.08,0.31,0.83],[0.62,1.00,0.58,0.14,0.27,0.61],[0.91,0.58,1.00,0.05,0.29,0.71],[0.08,0.14,0.05,1.00,0.03,0.12],[0.31,0.27,0.29,0.03,1.00,0.44],[0.83,0.61,0.71,0.12,0.44,1.00]];
+    const ctx = canvas.getContext('2d');
+    const draw = () => {
+      const W=canvas.offsetWidth, H=canvas.offsetHeight;
+      canvas.width=W; canvas.height=H;
+      const n=vars.length, pad=58, cell=Math.floor((Math.min(W,H)-pad-16)/n);
+      ctx.clearRect(0,0,W,H);
+      for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+        const v=matrix[r][c], t=(v+1)/2;
+        const red=Math.round(66+(226-66)*t), green=Math.round(135+(75-135)*t), blue=Math.round(245+(74-245)*t);
+        ctx.fillStyle=`rgb(${red},${green},${blue})`;
+        ctx.beginPath(); ctx.roundRect(pad+c*cell+1, 8+r*cell+1, cell-2, cell-2, 4); ctx.fill();
+        ctx.fillStyle=Math.abs(v)>0.5?'#fff':'#1E1C18';
+        ctx.font=`500 ${Math.floor(cell*0.27)}px Sora, sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(v.toFixed(2), pad+c*cell+cell/2, 8+r*cell+cell/2);
+      }
+      ctx.fillStyle='#6B6560'; ctx.font=`11px Sora, sans-serif`;
+      vars.forEach((v,j)=>{
+        ctx.textAlign='right'; ctx.textBaseline='middle';
+        ctx.fillText(v, pad-6, 8+j*cell+cell/2);
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText(v, pad+j*cell+cell/2, 8+n*cell+5);
+      });
+      chartInstances[i]=true;
+    };
+    setTimeout(draw, 100);
+    legendEl.innerHTML = `<div class="legend-item" style="font-size:12px;color:#6B6560;">Warm red = strong positive correlation · Cool blue = negative · Scale: −1 to +1</div>`;
+    return;
+  }
+
+  else if (type === 'normal_curve') {
+    const mu=2.4, sigma=0.6;
+    const xs=Array.from({length:80},(_,j)=>+(0.2+j*0.055).toFixed(3));
+    const pdf=(x,m,s)=>(1/(s*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-m)/s)**2);
+    const ys=xs.map(x=>+pdf(x,mu,sigma).toFixed(4));
+    const top10=xs.map((x,j)=>x>=mu+1.282*sigma?ys[j]:null);
+    chartInstances[i] = new Chart(canvas, {
+      type:'line',
+      data:{ labels:xs, datasets:[
+        {label:'CTR Distribution',data:ys,borderColor:'#534AB7',backgroundColor:'rgba(83,74,183,0.1)',fill:true,tension:0.4,borderWidth:2.5,pointRadius:0},
+        {label:'Top 10% zone',data:top10,borderColor:'rgba(226,75,74,0)',backgroundColor:'rgba(226,75,74,0.3)',fill:true,tension:0.4,pointRadius:0}
+      ]},
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'CTR (%)'},ticks:{callback:(v,j)=>xs[j]%0.6<0.06?xs[j].toFixed(1)+'%':''}},y:{title:{display:true,text:'Probability Density'}}}}
+    });
+    legendEl.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:#534AB7"></div>Normal distribution μ=2.4% σ=0.6%</div><div class="legend-item"><div class="legend-dot" style="background:rgba(226,75,74,0.55)"></div>Top 10% zone — CTR ≥ 3.17%</div>`;
+  }
+
+  else if (type === 'bubble') {
+    const cats=['Electronics','Fashion','Books','Furniture','Toys','Sports','Beauty','Home'];
+    const aov=[220,85,22,340,45,95,55,110],cvr=[2.1,4.8,6.8,1.4,5.2,3.9,4.4,3.1],rev=[2.1,1.4,0.4,0.6,0.8,1.1,0.7,0.9];
+    const cols=['#378ADD','#7F77DD','#1D9E75','#EF9F27','#E24B4A','#D4537E','#5DCAA5','#5DCAA5'];
+    chartInstances[i] = new Chart(canvas, {
+      type:'bubble',
+      data:{ datasets:cats.map((name,j)=>({ label:name, data:[{x:aov[j],y:cvr[j],r:rev[j]*12}], backgroundColor:cols[j]+'88', borderColor:cols[j], borderWidth:1.5 })) },
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${cats[ctx.datasetIndex]}  AOV:$${aov[ctx.datasetIndex]}  CVR:${cvr[ctx.datasetIndex]}%  Rev:$${rev[ctx.datasetIndex]}M`}}},scales:{x:{title:{display:true,text:'Average Order Value ($)'},min:0,max:390},y:{title:{display:true,text:'Conversion Rate (%)'},min:0,max:8.5}}}
+    });
+    legendEl.innerHTML = cats.map((c,j)=>`<div class="legend-item"><div class="legend-dot" style="background:${cols[j]}"></div>${c}</div>`).join('');
+  }
+
+  else if (type === 'dashboard_multi') {
+    const routes=['Route A','Route B','Route C','Route D'];
+    const means=[68.4,75.1,71.8,82.3];
+    chartInstances[i] = new Chart(canvas, {
+      type:'bar',
+      data:{ labels:routes, datasets:[
+        {label:'Mean Delivery (hrs)',data:means,backgroundColor:means.map(m=>m<72?'rgba(29,158,117,0.5)':'rgba(226,75,74,0.5)'),borderColor:means.map(m=>m<72?'#1D9E75':'#E24B4A'),borderWidth:2},
+        {label:'72h Standard',data:[72,72,72,72],type:'line',borderColor:'#BA7517',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false}
+      ]},
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Mean: ${ctx.parsed.y}h`:'Standard: 72h'}}},scales:{y:{title:{display:true,text:'Delivery Time (hours)'},min:60,max:90},x:{grid:{display:false}}}}
+    });
+    legendEl.innerHTML = `<div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>Below 72h benchmark (faster)</div><div class="legend-item"><div class="legend-dot" style="background:#E24B4A"></div>Above 72h benchmark (slower)</div><div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div>72h company standard</div>`;
+  }
+}
+
+buildPanels();
+buildNav();
+updateTopbar();
+setTimeout(() => renderChart(0), 100);
+</script>
+</body>
+</html>
